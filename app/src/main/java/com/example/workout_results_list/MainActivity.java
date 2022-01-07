@@ -7,7 +7,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -17,7 +16,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.listview_custom);
+        setContentView(R.layout.activity_main);
 
         this.InitializeMovieData();
 
@@ -40,8 +39,9 @@ public class MainActivity extends AppCompatActivity {
     {
         movieDataList = new ArrayList<SampleData>();
 
-        movieDataList.add(new SampleData(R.drawable.movieposter1, "미션임파서블","15세 이상관람가"));
-        movieDataList.add(new SampleData(R.drawable.movieposter2, "아저씨","19세 이상관람가"));
-        movieDataList.add(new SampleData(R.drawable.movieposter3, "어벤져스","12세 이상관람가"));
+        movieDataList.add(new SampleData(R.drawable.exer1, "미션임파서블","15세 이상관람가"));
+        movieDataList.add(new SampleData(R.drawable.exer1, "아저씨","19세 이상관람가"));
+        movieDataList.add(new SampleData(R.drawable.exer1, "어벤져스","12세 이상관람가"));
     }
+
 }
