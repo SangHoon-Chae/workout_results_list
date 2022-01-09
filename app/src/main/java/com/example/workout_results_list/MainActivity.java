@@ -29,9 +29,10 @@ import io.reactivex.schedulers.Schedulers;
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<SampleData> movieDataList;
+    private String[][] exerMatrix;
     private String[][] subjMatrix;
-    Object[] vector;
-    String urlPhp;
+    private Object[] vector;
+    private String urlPhp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +48,65 @@ public class MainActivity extends AppCompatActivity {
         final MyAdapter myAdapter = new MyAdapter(this,movieDataList);
 
         listView.setAdapter(myAdapter);
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView parent, View v, int position, long id){
+                fromCallable(new Callable<Boolean>() {
+                    @Override
+                    public Boolean call() throws Exception {
+                        try {
+                            urlPhp = "http://203.252.230.222/getExerDataset.php?subj_id=" + myAdapter.getItem(position).getMovieName();
+
+                            URL url = new URL(urlPhp);
+                            HttpClient client = new DefaultHttpClient();
+                            HttpGet request = new HttpGet();
+                            request.setURI(new URI(urlPhp));
+                            HttpResponse response = client.execute(request);
+                            BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+
+                            StringBuffer sb = new StringBuffer("");
+                            String line = "";
+
+                            while ((line = in.readLine()) != null) {
+                                sb.append(line);
+                                break;
+                            }
+                            // DB 에 Data 가 없는 경우
+                            if (line == null) {
+                                in.close();
+//                        prevCount = 0;
+                                return true;
+                            }
+                            else {
+                                in.close();
+                                String[] dbExerData = line.split("%");
+                                exerMatrix = new String[dbExerData.length][];
+
+                                int r = 0;
+                                for (String row : dbExerData) {
+                                    exerMatrix[r++] = row.split("&");
+                                }
+
+//                        prevCount = Integer.valueOf(dbExerData[2]);
+                                return true;               // String 형태로 반환
+                            }
+                        } catch (Exception e) {
+                            return true;
+                        }
+
+                        // RxJava does not accept null return value. Null will be treated as a failure.
+                        // So just make it return true.
+                    }
+                }) // Execute in IO thread, i.e. background thread.
+                        .subscribeOn(Schedulers.newThread())
+                        // report or post the result to main thread.
+                        .observeOn(AndroidSchedulers.mainThread())
+                        // execute this RxJava
+                        .subscribe();
+
                 Intent intent = new Intent(MainActivity.this, Plot.class);
-                intent.putExtra("subjectId", myAdapter.getItem(position).getMovieName());
+                intent.putExtra("exerData", exerMatrix);
                 startActivity(intent);
             }
         });

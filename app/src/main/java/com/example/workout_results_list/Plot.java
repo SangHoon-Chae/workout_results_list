@@ -46,17 +46,17 @@ public class Plot extends Activity {
     private String id;
     private String exer1;
     private int data1;
-    private String[][] subjMatrix;
+    private String[][] exerMatrix;
     Object[] vector;
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plot);
 
-//        subjMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
         vector = (Object[])getIntent().getSerializableExtra("exerData");
-        subjMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
+        exerMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
 
         //BarChart
         barChart = (BarChart) findViewById(R.id.chart1);
@@ -102,14 +102,23 @@ public class Plot extends Activity {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void graphInitSetting(){
         ArrayList<Integer> exer_data = new ArrayList<>();
+        ArrayList<String> exer_day = new ArrayList<>();
 
-        labelList.add("오 늘");
+        int i = 0;
+        while(i < exerMatrix.length) {
+            exer_data.add(Integer.valueOf(exerMatrix[i][2]) + Integer.valueOf(exerMatrix[i][3]) + Integer.valueOf(exerMatrix[i][4]) + Integer.valueOf(exerMatrix[i][5]));
+            exer_day.add(exerMatrix[i][1]);
+            i++;
+        }
+
+
+        labelList.add(exer_day.get(0));
         labelList.add("하루전");
         labelList.add("이틀전");
 
-//        jsonList.add(Integer.valueOf(prevExerTotal));
-//        jsonList.add(Integer.valueOf(prevExerTotal2));
-//        jsonList.add(Integer.valueOf(prevExerTotal3));
+        jsonList.add(Integer.valueOf(exer_data.get(0)));
+        jsonList.add(Integer.valueOf(exer_data.get(1)));
+        jsonList.add(Integer.valueOf(exer_data.get(2)));
 
         BarChartGraph(labelList, jsonList);
         barChart.setTouchEnabled(false); //확대하지못하게 막아버림! 별로 안좋은 기능인 것 같아~
