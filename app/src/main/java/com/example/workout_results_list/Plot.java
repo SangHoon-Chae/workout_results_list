@@ -22,6 +22,7 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,10 +81,10 @@ public class Plot extends Activity {
 //        ArrayList<IBarDataSet> dataSets = new ArrayList<>();
 //        dataSets.add((IBarDataSet) depenses);
         BarData data = new BarData (depenses);
+//        data.setBarWidth(1f);
 
         barChart.getAxisRight().setEnabled(false);
         depenses.setColors(ColorTemplate.JOYFUL_COLORS);
-
         barChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
         barChart.getXAxis().setDrawGridLines(false);
         barChart.getXAxis().setDrawLabels(true);
@@ -94,6 +95,9 @@ public class Plot extends Activity {
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labelList));
 
         barChart.setData(data);
+        barChart.setVisibleXRangeMaximum(5);
+        barChart.moveViewToX(1);
+
         barChart.animateXY(500, 500);
         barChart.notifyDataSetChanged();
         barChart.invalidate();
@@ -111,22 +115,44 @@ public class Plot extends Activity {
             i++;
         }
 
+        int data_length;
 
-        labelList.add(exer_day.get(0));
-        labelList.add("하루전");
-        labelList.add("이틀전");
+        ParsePosition pp1 = new ParsePosition(0);
+        ParsePosition pp2 = new ParsePosition(0);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat dateFormat_simple = new SimpleDateFormat("MM-dd", Locale.getDefault());
+        Date date1 = dateFormat.parse (exer_day.get(0), pp1);
+        Date date2 = dateFormat.parse (exer_day.get(i-1), pp2);
 
-        jsonList.add(Integer.valueOf(exer_data.get(0)));
-        jsonList.add(Integer.valueOf(exer_data.get(1)));
-        jsonList.add(Integer.valueOf(exer_data.get(2)));
+        Calendar c = Calendar.getInstance();
+        c.setTime(date1);
+        Calendar c2 = Calendar.getInstance();
+        c2.setTime(date2);
+
+        data_length = (int) (date2.getTime() - date1.getTime())/ (24 * 60 * 60 * 1000);
+
+        int k = 0; // k: exerData index, j: exerDay index
+        for (int j = 0; j < data_length; j++) {
+            labelList.add(dateFormat_simple.format(c.getTime()));
+
+            if(dateFormat.format(c.getTime()).equals(exer_day.get(k)))
+            {
+                jsonList.add(Integer.valueOf(exer_data.get(k)));
+                k++;
+            }
+            else
+                jsonList.add(0);
+
+            c.add(Calendar.DATE, 1);
+        }
+
 
         BarChartGraph(labelList, jsonList);
-        barChart.setTouchEnabled(false); //확대하지못하게 막아버림! 별로 안좋은 기능인 것 같아~
+        barChart.setTouchEnabled(true); //확대하지못하게 막아버림! 별로 안좋은 기능인 것 같아~
         //barChart.setRendererLeftYAxis();
-        barChart.setMaxVisibleValueCount(50);
-        barChart.setAutoScaleMinMaxEnabled(false);
-        barChart.setTouchEnabled(false); //확대하지못하게 막아버림! 별로 안좋은 기능인 것 같아~
-        barChart.getAxisLeft().setAxisMaxValue(500);
+//        barChart.setMaxVisibleValueCount(50);
+        barChart.setAutoScaleMinMaxEnabled(true);
+//        barChart.getAxisLeft().setAxisMaxValue(500);
         LimitLine ll1;
         ll1 = new LimitLine(200f, "목표 수치");
 

@@ -76,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
                             if (line == null) {
                                 in.close();
 //                        prevCount = 0;
+                                Toast.makeText(getApplicationContext(), "데이터가 없습니다.", Toast.LENGTH_SHORT).show();
                                 return true;
                             }
                             else {
@@ -87,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
                                 for (String row : dbExerData) {
                                     exerMatrix[r++] = row.split("&");
                                 }
+                                Intent intent = new Intent(MainActivity.this, Plot.class);
+                                intent.putExtra("exerData", exerMatrix);
+                                startActivity(intent);
 
 //                        prevCount = Integer.valueOf(dbExerData[2]);
                                 return true;               // String 형태로 반환
@@ -105,9 +109,6 @@ public class MainActivity extends AppCompatActivity {
                         // execute this RxJava
                         .subscribe();
 
-                Intent intent = new Intent(MainActivity.this, Plot.class);
-                intent.putExtra("exerData", exerMatrix);
-                startActivity(intent);
             }
         });
     }
