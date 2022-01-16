@@ -3,9 +3,12 @@ package com.example.workout_results_list;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Base64;
 import android.widget.Button;
 
 import androidx.annotation.RequiresApi;

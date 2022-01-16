@@ -47,7 +47,7 @@ public class MyAdapter extends BaseAdapter {
         TextView movieName = (TextView)view.findViewById(R.id.movieName);
         TextView grade = (TextView)view.findViewById(R.id.grade);
 
-        imageView.setImageResource(sample.get(position).getPoster());
+        imageView.setImageBitmap(sample.get(position).getBitmap());
         movieName.setText(sample.get(position).getMovieName());
         grade.setText(sample.get(position).getGrade());
 

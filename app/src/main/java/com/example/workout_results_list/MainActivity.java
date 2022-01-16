@@ -3,7 +3,10 @@ package com.example.workout_results_list;
 import static io.reactivex.Single.fromCallable;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -15,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
@@ -33,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private String[][] subjMatrix;
     private Object[] vector;
     private String urlPhp;
+    private String urlPhpPhoto;
+    String photoBinary;
+    Bitmap imgBitMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,25 +122,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void InitializeMovieData()
     {
-        movieDataList = new ArrayList<SampleData>();
-        int i = 0;
-        while(i < subjMatrix.length) {
-            movieDataList.add(new SampleData(R.drawable.exer1, subjMatrix[i][0], subjMatrix[i][1]));
-            i++;
-        }
-    }
-
-    private void loadResultsBackground(int id) {
         fromCallable(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 try {
-                    urlPhp = "http://203.252.230.222/getExerDataset.php?subj_id=" + String.valueOf(id);
+                    urlPhpPhoto = "http://203.252.230.222/getSubjPhoto.php?subj_id=" + String.valueOf(12354);
 
-                    URL url = new URL(urlPhp);
                     HttpClient client = new DefaultHttpClient();
                     HttpGet request = new HttpGet();
-                    request.setURI(new URI(urlPhp));
+                    request.setURI(new URI(urlPhpPhoto));
                     HttpResponse response = client.execute(request);
                     BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
@@ -141,9 +138,13 @@ public class MainActivity extends AppCompatActivity {
                     String line = "";
 
                     while ((line = in.readLine()) != null) {
+                        photoBinary = photoBinary + line;
                         sb.append(line);
-                        break;
                     }
+
+                    byte[] decodedString = Base64.decode(photoBinary, Base64.DEFAULT | Base64.NO_WRAP);
+                    imgBitMap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+
                     // DB 에 Data 가 없는 경우
                     if (line == null) {
                         in.close();
@@ -152,17 +153,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else {
                         in.close();
-                        String[] dbSubjData = line.split("%");
-                        String[][] subjMatrix = new String[dbSubjData.length][];
-
-                        int r = 0;
-                        for (String row : dbSubjData) {
-                            subjMatrix[r++] = row.split("&");
-                        }
-
 //                        prevCount = Integer.valueOf(dbExerData[2]);
                         return true;               // String 형태로 반환
                     }
+
                 } catch (Exception e) {
                     return true;
                 }
@@ -176,6 +170,23 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 // execute this RxJava
                 .subscribe();
+
+
+        movieDataList = new ArrayList<SampleData>();
+        int i = 0;
+        while(i < subjMatrix.length) {
+            movieDataList.add(new SampleData(R.drawable.exer1, subjMatrix[i][0], subjMatrix[i][1], imgBitMap));
+            i++;
+        }
+    }
+    
+    public void onBackPressed() {
+        finishAffinity();
+    }
+
+
+    private void loadPhoto(int id) {
+
     }
 
 }
