@@ -137,8 +137,11 @@ public class MainActivity extends AppCompatActivity {
                     StringBuffer sb = new StringBuffer("");
                     String line = "";
 
+                    // 1st line 을 복사(null 없애기 위해)
+                    line = in.readLine();
+                    photoBinary = line;
                     while ((line = in.readLine()) != null) {
-                        photoBinary = photoBinary + line;
+                        photoBinary = photoBinary.concat(line);
                         sb.append(line);
                     }
 
