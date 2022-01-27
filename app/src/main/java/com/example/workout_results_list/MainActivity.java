@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -27,12 +29,15 @@ import cz.msebera.android.httpclient.HttpResponse;
 import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
+import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<SampleData> movieDataList;
+    ArrayList<Bitmap> imgBitMapArray;
     private String[][] exerMatrix;
     private String[][] subjMatrix;
     private Object[] vector;
@@ -48,13 +53,14 @@ public class MainActivity extends AppCompatActivity {
 
         vector = (Object[])getIntent().getSerializableExtra("subjectArray");
         subjMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
-
-        this.InitializeMovieData();
+        imgBitMapArray = new ArrayList<Bitmap>();
+        this.InitializeListData();
 
         ListView listView = (ListView)findViewById(R.id.listView);
         final MyAdapter myAdapter = new MyAdapter(this,movieDataList);
 
         listView.setAdapter(myAdapter);
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
@@ -115,18 +121,17 @@ public class MainActivity extends AppCompatActivity {
                         .observeOn(AndroidSchedulers.mainThread())
                         // execute this RxJava
                         .subscribe();
-
             }
         });
     }
 
-    public void InitializeMovieData()
-    {
+    public void dbPhotoGet(int id){
+
         fromCallable(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 try {
-                    urlPhpPhoto = "http://203.252.230.222/getSubjPhoto.php?subj_id=" + String.valueOf(12354);
+                    urlPhpPhoto = "http://203.252.230.222/getSubjPhoto.php?subj_id=" + String.valueOf(id);
 
                     HttpClient client = new DefaultHttpClient();
                     HttpGet request = new HttpGet();
@@ -145,21 +150,34 @@ public class MainActivity extends AppCompatActivity {
                         sb.append(line);
                     }
 
-                    byte[] decodedString = Base64.decode(photoBinary, Base64.DEFAULT | Base64.NO_WRAP);
-                    imgBitMap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-
+                    if(photoBinary == null) {
+                        imgBitMapArray.add(null);
+                        in.close();
+                        return true;
+                    }
+                    else {
+                        byte[] decodedString = Base64.decode(photoBinary, Base64.DEFAULT | Base64.NO_WRAP);
+                        imgBitMap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                        imgBitMapArray.add(imgBitMap);
+                        in.close();
+                        return true;
+                    }
+/*
                     // DB 에 Data 가 없는 경우
                     if (line == null) {
                         in.close();
+//                        imgBitMapArray.add(null);
 //                        prevCount = 0;
                         return true;
                     }
                     else {
+                        while(imgBitMap == null) {};
+
                         in.close();
 //                        prevCount = Integer.valueOf(dbExerData[2]);
                         return true;               // String 형태로 반환
                     }
-
+*/
                 } catch (Exception e) {
                     return true;
                 }
@@ -172,13 +190,32 @@ public class MainActivity extends AppCompatActivity {
                 // report or post the result to main thread.
                 .observeOn(AndroidSchedulers.mainThread())
                 // execute this RxJava
-                .subscribe();
+                .subscribe(throwable->System.out.println("123"));
 
+
+//        while(imgBitMap == null) {};
+
+    }
+
+    public void InitializeListData()
+    {
+
+        final Integer[] idArray;
+        idArray = new Integer[subjMatrix.length];
+
+        for (int i = 0; i < idArray.length; i++ )
+        {
+            idArray[i] = Integer.valueOf(subjMatrix[i][0]);
+            dbPhotoGet(Integer.valueOf(subjMatrix[i][0]));
+        }
+
+        while(imgBitMapArray.size() != subjMatrix.length)
+        {}
 
         movieDataList = new ArrayList<SampleData>();
         int i = 0;
         while(i < subjMatrix.length) {
-            movieDataList.add(new SampleData(R.drawable.exer1, subjMatrix[i][0], subjMatrix[i][1], imgBitMap));
+            movieDataList.add(new SampleData(R.drawable.exer1, subjMatrix[i][0], subjMatrix[i][1], imgBitMapArray.get(i)));
             i++;
         }
     }

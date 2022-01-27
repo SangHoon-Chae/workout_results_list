@@ -92,7 +92,6 @@ public class IntroActivity extends AppCompatActivity {
                 // execute this RxJava
                 .subscribe();
 
-
         IntroThread introThread = new IntroThread(handler);
         introThread.start();
     }
