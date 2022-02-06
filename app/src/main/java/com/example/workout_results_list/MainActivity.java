@@ -30,6 +30,7 @@ import cz.msebera.android.httpclient.client.HttpClient;
 import cz.msebera.android.httpclient.client.methods.HttpGet;
 import cz.msebera.android.httpclient.impl.client.DefaultHttpClient;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.plugins.RxJavaPlugins;
 import io.reactivex.schedulers.Schedulers;
@@ -38,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     ArrayList<SampleData> movieDataList;
     ArrayList<Bitmap> imgBitMapArray;
+    ArrayList<Integer> idArray;
     private String[][] exerMatrix;
     private String[][] subjMatrix;
     private Object[] vector;
@@ -53,7 +55,13 @@ public class MainActivity extends AppCompatActivity {
 
         vector = (Object[])getIntent().getSerializableExtra("subjectArray");
         subjMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
-        imgBitMapArray = new ArrayList<Bitmap>();
+        idArray = new ArrayList<>(subjMatrix.length);
+
+        for(int j = 0; j < subjMatrix.length; j++)
+        {
+            idArray.add(Integer.valueOf(subjMatrix[j][0]));
+        }
+
         this.InitializeListData();
 
         ListView listView = (ListView)findViewById(R.id.listView);
@@ -126,12 +134,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void dbPhotoGet(int id){
-
-        fromCallable(new Callable<Boolean>() {
+        Single.fromCallable(new Callable<Boolean>() {
             @Override
             public Boolean call() throws Exception {
                 try {
                     urlPhpPhoto = "http://203.252.230.222/getSubjPhoto.php?subj_id=" + String.valueOf(id);
+                    int arrIndex = idArray.indexOf(id);
 
                     HttpClient client = new DefaultHttpClient();
                     HttpGet request = new HttpGet();
@@ -151,14 +159,14 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if(photoBinary == null) {
-                        imgBitMapArray.add(null);
+                        imgBitMapArray.add(arrIndex,null);
                         in.close();
                         return true;
                     }
                     else {
                         byte[] decodedString = Base64.decode(photoBinary, Base64.DEFAULT | Base64.NO_WRAP);
                         imgBitMap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        imgBitMapArray.add(imgBitMap);
+                        imgBitMapArray.add(arrIndex, imgBitMap);
                         in.close();
                         return true;
                     }
@@ -185,13 +193,9 @@ public class MainActivity extends AppCompatActivity {
                 // RxJava does not accept null return value. Null will be treated as a failure.
                 // So just make it return true.
             }
-        }) // Execute in IO thread, i.e. background thread.
-                .subscribeOn(Schedulers.newThread())
-                // report or post the result to main thread.
-                .observeOn(AndroidSchedulers.mainThread())
-                // execute this RxJava
-                .subscribe(throwable->System.out.println("123"));
-
+        })
+                // Execute in IO thread, i.e. background thread.
+                .subscribeOn(Schedulers.io()).blockingGet();
 
 //        while(imgBitMap == null) {};
 
@@ -200,17 +204,15 @@ public class MainActivity extends AppCompatActivity {
     public void InitializeListData()
     {
 
-        final Integer[] idArray;
-        idArray = new Integer[subjMatrix.length];
+//        final Integer[] idArray;
+//        idArray = new Integer[subjMatrix.length];
+        imgBitMapArray = new ArrayList<Bitmap>(subjMatrix.length);
 
-        for (int i = 0; i < idArray.length; i++ )
+        for (int i = 0; i < idArray.size(); i++ )
         {
-            idArray[i] = Integer.valueOf(subjMatrix[i][0]);
+//            idArray[i] = Integer.valueOf(subjMatrix[i][0]);
             dbPhotoGet(Integer.valueOf(subjMatrix[i][0]));
         }
-
-        while(imgBitMapArray.size() != subjMatrix.length)
-        {}
 
         movieDataList = new ArrayList<SampleData>();
         int i = 0;
@@ -219,11 +221,15 @@ public class MainActivity extends AppCompatActivity {
             i++;
         }
     }
-    
+
+
+    public void onsuccessfulComplete() {
+
+    }
+
     public void onBackPressed() {
         finishAffinity();
     }
-
 
     private void loadPhoto(int id) {
 
