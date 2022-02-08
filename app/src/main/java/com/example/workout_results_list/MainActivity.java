@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private String urlPhpPhoto;
     String photoBinary;
     Bitmap imgBitMap;
+    Bitmap defaultImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         vector = (Object[])getIntent().getSerializableExtra("subjectArray");
         subjMatrix = Arrays.copyOf(vector, vector.length, String[][].class);
         idArray = new ArrayList<>(subjMatrix.length);
+        defaultImg = BitmapFactory.decodeResource(getResources(), R.drawable.exer1);
 
         for(int j = 0; j < subjMatrix.length; j++)
         {
@@ -68,7 +70,6 @@ public class MainActivity extends AppCompatActivity {
         final MyAdapter myAdapter = new MyAdapter(this,movieDataList);
 
         listView.setAdapter(myAdapter);
-
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     if(photoBinary == null) {
-                        imgBitMapArray.add(arrIndex,null);
+                        imgBitMapArray.add(arrIndex,defaultImg);
                         in.close();
                         return true;
                     }
